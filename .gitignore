@@ -1,6 +1,10 @@
 # Data (Burası kritik!)
 data/
 
+checkpoints/
+outputs/
+
+
 # Modeller ve Çıktılar
 checkpoints/
 outputs/

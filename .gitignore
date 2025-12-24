@@ -1,0 +1,26 @@
+# Data (Burası kritik!)
+data/
+
+# Modeller ve Çıktılar
+checkpoints/
+outputs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# Kaggle
+.kaggle/

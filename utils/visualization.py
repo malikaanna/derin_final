@@ -9,6 +9,9 @@ import os
 from pathlib import Path
 from typing import Optional, Union
 
+# Use non-interactive backend to prevent tkinter threading issues
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -69,7 +72,6 @@ def show_images(
         plt.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"Saved image to {save_path}")
     
-    plt.show()
     plt.close()
 
 
@@ -151,8 +153,7 @@ def plot_losses(
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"Saved loss plot to {save_path}")
     
-    plt.show()
-    plt.close()
+    plt.close(fig)
 
 
 def plot_comparison(
@@ -200,8 +201,7 @@ def plot_comparison(
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"Saved comparison to {save_path}")
     
-    plt.show()
-    plt.close()
+    plt.close(fig)
 
 
 def plot_latent_space(
@@ -271,8 +271,7 @@ def plot_latent_space(
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"Saved latent space plot to {save_path}")
     
-    plt.show()
-    plt.close()
+    plt.close(fig)
 
 
 def create_interpolation(

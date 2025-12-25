@@ -1,0 +1,72 @@
+============================================================
+GAN vs VAE KARŞILAŞTIRMA RAPORU
+Comparative Analysis Report
+============================================================
+
+Tarih: 2025-12-25 03:21:49
+
+------------------------------------------------------------
+1. PİKSEL İSTATİSTİKLERİ (Pixel Statistics)
+------------------------------------------------------------
+
+VAE:
+  Mean: 0.5951
+  Std:  0.2776
+
+DCGAN:
+  Mean: 0.5888
+  Std:  0.3527
+
+------------------------------------------------------------
+2. ÇEŞİTLİLİK SKORU (Diversity Score)
+------------------------------------------------------------
+
+VAE Diversity:   71.1807
+DCGAN Diversity: 97.2981
+
+→ DCGAN daha çeşitli görüntüler üretiyor
+
+------------------------------------------------------------
+3. ÜRETİM HIZİ (Generation Speed)
+------------------------------------------------------------
+
+VAE:
+  Ortalama süre: 0.92 ms
+  Görüntü/saniye: 69728.9
+
+DCGAN:
+  Ortalama süre: 1.75 ms
+  Görüntü/saniye: 36632.0
+
+------------------------------------------------------------
+4. MODEL PARAMETRELERİ (Model Parameters)
+------------------------------------------------------------
+
+VAE Parameters:   2,958,659
+DCGAN Parameters: 3,576,704
+
+------------------------------------------------------------
+5. GENEL DEĞERLENDİRME (Overall Assessment)
+------------------------------------------------------------
+
+VAE Güçlü Yönleri:
+  ✓ Kararlı eğitim süreci
+  ✓ Latent space üzerinde interpolasyon yapılabilir
+  ✓ Reconstruction + Generation yapabilir
+  ✓ Mode collapse problemi yok
+
+VAE Zayıf Yönleri:
+  ✗ Üretilen görüntüler bulanık olabilir
+  ✗ MSE loss detayları kaybedebilir
+
+DCGAN Güçlü Yönleri:
+  ✓ Keskin ve detaylı görüntüler
+  ✓ Gerçekçi dokular üretebilir
+  ✓ Yüksek çözünürlüklü üretim potansiyeli
+
+DCGAN Zayıf Yönleri:
+  ✗ Eğitim dengesizlikleri (mode collapse)
+  ✗ Hiperparametre hassasiyeti
+  ✗ Değerlendirme zorluğu
+
+============================================================

@@ -2,12 +2,6 @@
 data/
 
 
-
-
-# Modeller ve Çıktılar
-checkpoints/
-outputs/
-
 # Python
 __pycache__/
 *.py[cod]

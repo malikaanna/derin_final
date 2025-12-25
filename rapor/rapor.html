@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GAN vs VAE Karşılaştırmalı Analizi - Malika Annamuradova</title>
+    <style>
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.8;
+            color: #222;
+        }
+
+        h1 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 0.5rem;
+        }
+
+        h2 {
+            border-bottom: 1px solid #aaa;
+            padding-bottom: 0.3rem;
+            margin-top: 2rem;
+        }
+
+        h3 {
+            margin-top: 1.5rem;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #aaa;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #f0f0f0;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+
+        code {
+            font-family: Consolas, monospace;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1rem 0;
+            border: 1px solid #ddd;
+        }
+
+        .img-caption {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        ul,
+        ol {
+            margin: 1rem 0;
+        }
+
+        .toc {
+            background: #f9f9f9;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            margin: 1rem 0;
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: #0645ad;
+        }
+
+        .info-box {
+            background: #f0f7ff;
+            border: 1px solid #b3d4fc;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .warning-box {
+            background: #fff8e6;
+            border: 1px solid #ffe58f;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        blockquote {
+            border-left: 4px solid #ccc;
+            margin: 1rem 0;
+            padding-left: 1rem;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Üretici Modellerin Karşılaştırmalı Analizi: DCGAN vs VAE</h1>
+    <p><em>Meyve Tazeliği Veri Seti Üzerinde Görüntü Sentezi</em></p>
+
+    <div class="info-box">
+        <p><strong>Ders:</strong> DSM 5014 - Derin Öğrenme Yöntemleri ve Uygulamaları</p>
+        <p><strong>Hazırlayan:</strong> Malika Annamuradova</p>
+        <p><strong>Öğrenci No:</strong> 2024900442</p>
+        <p><strong>Tarih:</strong> Aralık 2025</p>
+    </div>
+
+    <div class="toc">
+        <strong>İçindekiler</strong>
+        <ol>
+            <li><a href="#giris">Giriş</a></li>
+            <li><a href="#teorik">Teorik Arka Plan</a></li>
+            <li><a href="#veri">Veri Seti</a></li>
+            <li><a href="#yontem">Yöntem</a></li>
+            <li><a href="#deneysel">Deneysel Sonuçlar</a></li>
+            <li><a href="#karsilastirma">Karşılaştırmalı Analiz</a></li>
+            <li><a href="#sonuc">Sonuç ve Değerlendirme</a></li>
+            <li><a href="#referanslar">Referanslar</a></li>
+        </ol>
+    </div>
+
+    <!-- 1. GİRİŞ -->
+    <h2 id="giris">1. Giriş</h2>
+
+    <h3>1.1 Motivasyon</h3>
+    <p>Derin öğrenme alanında üretici modeller (generative models), son yıllarda büyük ilgi görmektedir. Bu modeller,
+        eğitim verilerinin dağılımını öğrenerek yeni, gerçekçi veriler üretebilmektedir. Görüntü sentezi, veri artırımı,
+        anomali tespiti ve yaratıcı uygulamalar gibi birçok alanda kullanılmaktadırlar.</p>
+
+    <p>Bu projede, iki temel üretici model ailesi karşılaştırılmaktadır:</p>
+    <ul>
+        <li><strong>Variational Autoencoder (VAE)</strong> - Olasılıksal yaklaşım</li>
+        <li><strong>Generative Adversarial Network (GAN)</strong> - Adversarial yaklaşım</li>
+    </ul>
+
+    <h3>1.2 Projenin Amacı</h3>
+    <p>Bu çalışmanın temel amacı, VAE ve DCGAN modellerinin görüntü üretme yeteneklerini aynı veri seti üzerinde
+        deneysel olarak karşılaştırmak ve her iki yaklaşımın güçlü ve zayıf yönlerini analiz etmektir. Karşılaştırma
+        kriterleri şunlardır:</p>
+    <ol>
+        <li>Görsel kalite ve gerçekçilik</li>
+        <li>Üretilen görüntülerin çeşitliliği</li>
+        <li>Eğitim kararlılığı ve yakınsama</li>
+        <li>Hesaplama verimliliği</li>
+    </ol>
+
+    <h3>1.3 Seçilen Senaryo</h3>
+    <p>Ödev kapsamında <strong>Seçenek 1: Görüntü Sentezi</strong> tercih edilmiştir. Bu senaryoda, aynı veri seti
+        üzerinde hem VAE hem de DCGAN ile görüntü üretimi yapılmış ve sonuçlar çeşitli metriklerle değerlendirilmiştir.
+    </p>
+
+    <!-- 2. TEORİK ARKA PLAN -->
+    <h2 id="teorik">2. Teorik Arka Plan</h2>
+
+    <h3>2.1 Autoencoder (AE) ve Variational Autoencoder (VAE)</h3>
+
+    <h4>2.1.1 Autoencoder Nedir?</h4>
+    <p>Autoencoder, girdi verisini önce düşük boyutlu bir "latent" (gizli) temsile sıkıştıran (encoder), ardından bu
+        temsilden orijinal veriyi yeniden oluşturan (decoder) bir sinir ağı mimarisidir. Temel amaç, verinin özünü
+        yakalayabilecek kompakt bir temsil öğrenmektir.</p>
+
+    <p>Matematiksel olarak:</p>
+    <ul>
+        <li><strong>Encoder:</strong> z = f(x) - Girdiyi latent space'e eşler</li>
+        <li><strong>Decoder:</strong> x' = g(z) - Latent vektörden çıktı üretir</li>
+        <li><strong>Amaç:</strong> x ≈ x' olacak şekilde ağı eğitmek</li>
+    </ul>
+
+    <h4>2.1.2 VAE'nin Farkı</h4>
+    <p>Variational Autoencoder, klasik autoencoder'dan farklı olarak <strong>olasılıksal</strong> bir yaklaşım benimser.
+        Encoder, tek bir latent vektör yerine bir <strong>olasılık dağılımının parametrelerini</strong> (ortalama μ ve
+        varyans σ²) üretir.</p>
+
+    <p>VAE'nin temel yeniliği <strong>Reparameterization Trick</strong>'tir:</p>
+    <blockquote>
+        z = μ + σ × ε, burada ε ~ N(0, 1)
+    </blockquote>
+    <p>Bu sayede backpropagation stokastik örnekleme üzerinden yapılabilir hale gelir.</p>
+
+    <h4>2.1.3 VAE Loss Fonksiyonu</h4>
+    <p>VAE'nin loss fonksiyonu iki bileşenden oluşur:</p>
+    <ol>
+        <li><strong>Reconstruction Loss:</strong> Üretilen görüntünün orijinale ne kadar benzediği (MSE veya BCE)</li>
+        <li><strong>KL Divergence:</strong> Latent dağılımının standart normal dağılıma (N(0,1)) ne kadar yakın olduğu
+        </li>
+    </ol>
+    <p>Bu iki bileşen arasındaki denge, VAE'nin hem iyi reconstruction yapmasını hem de düzenli bir latent space
+        öğrenmesini sağlar.</p>
+
+    <h3>2.2 Generative Adversarial Networks (GAN)</h3>
+
+    <h4>2.2.1 GAN'ın Çalışma Prensibi</h4>
+    <p>GAN, Ian Goodfellow ve arkadaşları tarafından 2014 yılında önerilen devrim niteliğinde bir üretici modeldir. İki
+        ağın <strong>adversarial (çekişmeli)</strong> şekilde eğitilmesi prensibine dayanır:</p>
+
+    <ol>
+        <li><strong>Generator (Üretici - G):</strong> Rastgele gürültüden gerçekçi görüntüler üretmeye çalışır</li>
+        <li><strong>Discriminator (Ayırt Edici - D):</strong> Gerçek ve sahte görüntüleri ayırt etmeye çalışır</li>
+    </ol>
+
+    <p>Bu iki ağ sürekli olarak birbirini geliştirir: Generator daha iyi sahteler üretir, Discriminator daha iyi ayırt
+        eder. Eğitim sonunda Generator, Discriminator'ı kandırabilecek kadar gerçekçi görüntüler üretir.</p>
+
+    <h4>2.2.2 DCGAN Mimarisi</h4>
+    <p>Deep Convolutional GAN (DCGAN), Radford et al. (2016) tarafından önerilmiştir. Temel yenilikleri:</p>
+    <ul>
+        <li>Fully connected katmanlar yerine <strong>convolutional katmanlar</strong> kullanımı</li>
+        <li>Batch Normalization kullanımı (son katman hariç)</li>
+        <li>Generator'da ReLU, Discriminator'da LeakyReLU aktivasyonu</li>
+        <li>Pooling yerine strided convolution ile downsampling/upsampling</li>
+    </ul>
+
+    <h4>2.2.3 Mode Collapse Problemi</h4>
+    <p>GAN eğitiminin en önemli zorluklarından biri <strong>mode collapse</strong>'tır. Bu durumda Generator,
+        Discriminator'ı kandıran birkaç görüntüyü sürekli üretir ve veri setinin çeşitliliğini yakalayamaz. Bu problem,
+        dikkatli hiperparametre seçimi ve eğitim teknikleriyle azaltılabilir.</p>
+
+    <h3>2.3 VAE vs GAN: Temel Farklar</h3>
+    <table>
+        <tr>
+            <th>Özellik</th>
+            <th>VAE</th>
+            <th>GAN</th>
+        </tr>
+        <tr>
+            <td>Eğitim Yaklaşımı</td>
+            <td>Maksimum likelihood (ELBO)</td>
+            <td>Adversarial (min-max oyun)</td>
+        </tr>
+        <tr>
+            <td>Latent Space</td>
+            <td>Yapılandırılmış, sürekli</td>
+            <td>Yapılandırılmamış</td>
+        </tr>
+        <tr>
+            <td>Görüntü Kalitesi</td>
+            <td>Bulanık olabilir</td>
+            <td>Keskin, detaylı</td>
+        </tr>
+        <tr>
+            <td>Eğitim Kararlılığı</td>
+            <td>Kararlı</td>
+            <td>Dengesiz olabilir</td>
+        </tr>
+        <tr>
+            <td>Mode Collapse</td>
+            <td>Yok</td>
+            <td>Risk var</td>
+        </tr>
+    </table>
+
+    <!-- 3. VERİ SETİ -->
+    <h2 id="veri">3. Veri Seti</h2>
+
+    <h3>3.1 Veri Seti Hakkında</h3>
+    <p>Bu çalışmada Kaggle platformundan alınan <strong>"Fruits Fresh and Rotten for Classification"</strong> veri seti
+        kullanılmıştır. Veri seti, taze ve çürük meyve görüntülerinden oluşmaktadır.</p>
+
+    <table>
+        <tr>
+            <th>Özellik</th>
+            <th>Değer</th>
+        </tr>
+        <tr>
+            <td>Kaynak</td>
+            <td>Kaggle (sriramr/fruits-fresh-and-rotten-for-classification)</td>
+        </tr>
+        <tr>
+            <td>Toplam Görüntü</td>
+            <td>10,901</td>
+        </tr>
+        <tr>
+            <td>Sınıf Sayısı</td>
+            <td>6</td>
+        </tr>
+        <tr>
+            <td>Orijinal Boyut</td>
+            <td>Değişken</td>
+        </tr>
+        <tr>
+            <td>İşlenmiş Boyut</td>
+            <td>64×64×3 (RGB)</td>
+        </tr>
+    </table>
+
+    <h3>3.2 Sınıf Dağılımı</h3>
+    <table>
+        <tr>
+            <th>Sınıf</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>freshapples</td>
+            <td>Taze elma görüntüleri</td>
+        </tr>
+        <tr>
+            <td>freshbanana</td>
+            <td>Taze muz görüntüleri</td>
+        </tr>
+        <tr>
+            <td>freshoranges</td>
+            <td>Taze portakal görüntüleri</td>
+        </tr>
+        <tr>
+            <td>rottenapples</td>
+            <td>Çürük elma görüntüleri</td>
+        </tr>
+        <tr>
+            <td>rottenbanana</td>
+            <td>Çürük muz görüntüleri</td>
+        </tr>
+        <tr>
+            <td>rottenoranges</td>
+            <td>Çürük portakal görüntüleri</td>
+        </tr>
+    </table>
+
+    <h3>3.3 Veri Ön İşleme</h3>
+    <p>Görüntüler aşağıdaki işlemlerden geçirilmiştir:</p>
+    <ol>
+        <li><strong>Yeniden Boyutlandırma:</strong> Tüm görüntüler 64×64 piksel boyutuna getirildi</li>
+        <li><strong>Normalizasyon:</strong> Piksel değerleri [-1, 1] aralığına normalize edildi (Tanh aktivasyonu için)
+        </li>
+        <li><strong>Eğitim/Doğrulama Bölümü:</strong> %90 eğitim (9,811), %10 doğrulama (1,090)</li>
+    </ol>
+
+    <h3>3.4 Veri Seti Seçim Gerekçesi</h3>
+    <p>Bu veri seti tercih edilmesinin nedenleri:</p>
+    <ul>
+        <li>Yeterli sayıda görüntü içermesi (10,000+)</li>
+        <li>Görsel çeşitlilik (farklı meyveler, taze/çürük durumları)</li>
+        <li>Belirgin renk ve şekil özellikleri (model öğrenmesi için uygun)</li>
+        <li>Pratik uygulama potansiyeli (tarımsal kalite kontrol)</li>
+    </ul>
+
+    <!-- 4. YÖNTEM -->
+    <h2 id="yontem">4. Yöntem</h2>
+
+    <h3>4.1 VAE Model Mimarisi</h3>
+
+    <h4>4.1.1 Encoder</h4>
+    <p>Encoder, 64×64×3 boyutundaki RGB görüntüyü alarak 128 boyutlu latent dağılım parametrelerine (μ ve log σ²)
+        dönüştürür.</p>
+
+    <pre><code># Encoder: 3×64×64 → 256×4×4 → latent_dim
+self.encoder = nn.Sequential(
+    # Katman 1: 3×64×64 → 32×32×32
+    nn.Conv2d(3, 32, kernel_size=4, stride=2, padding=1),
+    nn.BatchNorm2d(32),
+    nn.LeakyReLU(0.2, inplace=True),
+    
+    # Katman 2: 32×32×32 → 64×16×16
+    nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),
+    nn.BatchNorm2d(64),
+    nn.LeakyReLU(0.2, inplace=True),
+    
+    # Katman 3: 64×16×16 → 128×8×8
+    nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1),
+    nn.BatchNorm2d(128),
+    nn.LeakyReLU(0.2, inplace=True),
+    
+    # Katman 4: 128×8×8 → 256×4×4
+    nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1),
+    nn.BatchNorm2d(256),
+    nn.LeakyReLU(0.2, inplace=True),
+)
+
+# Latent parametreler: 256×4×4 = 4096 → 128
+self.fc_mu = nn.Linear(4096, 128)      # Ortalama (μ)
+self.fc_logvar = nn.Linear(4096, 128)  # Log varyans (log σ²)</code></pre>
+
+    <h4>4.1.2 Decoder</h4>
+    <p>Decoder, 128 boyutlu latent vektörü alarak 64×64×3 boyutunda görüntü üretir:</p>
+
+    <pre><code># Decoder: latent_dim → 256×4×4 → 3×64×64
+self.fc_decode = nn.Linear(128, 4096)
+
+self.decoder = nn.Sequential(
+    # 256×4×4 → 128×8×8
+    nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),
+    nn.BatchNorm2d(128),
+    nn.ReLU(inplace=True),
+    
+    # 128×8×8 → 64×16×16
+    nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
+    nn.BatchNorm2d(64),
+    nn.ReLU(inplace=True),
+    
+    # 64×16×16 → 32×32×32
+    nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
+    nn.BatchNorm2d(32),
+    nn.ReLU(inplace=True),
+    
+    # 32×32×32 → 3×64×64
+    nn.ConvTranspose2d(32, 3, kernel_size=4, stride=2, padding=1),
+    nn.Tanh(),  # Çıktı: [-1, 1]
+)</code></pre>
+
+    <h4>4.1.3 VAE Loss Fonksiyonu</h4>
+    <pre><code>def vae_loss(recon_x, x, mu, logvar, kl_weight=1.0):
+    # Reconstruction Loss: Piksel bazlı MSE
+    recon_loss = F.mse_loss(recon_x, x, reduction='sum') / x.size(0)
+    
+    # KL Divergence: Latent dağılımın N(0,1)'e yakınlığı
+    # KL = -0.5 × Σ(1 + log(σ²) - μ² - σ²)
+    kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()) / x.size(0)
+    
+    # Toplam Loss
+    return recon_loss + kl_weight * kl_loss, recon_loss, kl_loss</code></pre>
+
+    <h3>4.2 DCGAN Model Mimarisi</h3>
+
+    <h4>4.2.1 Generator</h4>
+    <p>Generator, 100 boyutlu noise vektöründen 64×64×3 görüntü üretir:</p>
+
+    <pre><code>class Generator(nn.Module):
+    def __init__(self, noise_dim=100, ngf=64):
+        self.main = nn.Sequential(
+            # Giriş: 100×1×1 → 512×4×4
+            nn.ConvTranspose2d(100, ngf*8, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(ngf*8),
+            nn.ReLU(True),
+            
+            # 512×4×4 → 256×8×8
+            nn.ConvTranspose2d(ngf*8, ngf*4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf*4),
+            nn.ReLU(True),
+            
+            # 256×8×8 → 128×16×16
+            nn.ConvTranspose2d(ngf*4, ngf*2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf*2),
+            nn.ReLU(True),
+            
+            # 128×16×16 → 64×32×32
+            nn.ConvTranspose2d(ngf*2, ngf, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf),
+            nn.ReLU(True),
+            
+            # 64×32×32 → 3×64×64
+            nn.ConvTranspose2d(ngf, 3, 4, 2, 1, bias=False),
+            nn.Tanh()
+        )</code></pre>
+
+    <h4>4.2.2 Discriminator</h4>
+    <pre><code>class Discriminator(nn.Module):
+    def __init__(self, ndf=64):
+        self.main = nn.Sequential(
+            # 3×64×64 → 64×32×32
+            nn.Conv2d(3, ndf, 4, 2, 1, bias=False),
+            nn.LeakyReLU(0.2, inplace=True),
+            
+            # 64×32×32 → 128×16×16
+            nn.Conv2d(ndf, ndf*2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf*2),
+            nn.LeakyReLU(0.2, inplace=True),
+            
+            # 128×16×16 → 256×8×8
+            nn.Conv2d(ndf*2, ndf*4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf*4),
+            nn.LeakyReLU(0.2, inplace=True),
+            
+            # 256×8×8 → 512×4×4
+            nn.Conv2d(ndf*4, ndf*8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf*8),
+            nn.LeakyReLU(0.2, inplace=True),
+            
+            # 512×4×4 → 1×1×1
+            nn.Conv2d(ndf*8, 1, 4, 1, 0, bias=False),
+            nn.Sigmoid()
+        )</code></pre>
+
+    <h3>4.3 Eğitim Konfigürasyonu</h3>
+
+    <h4>4.3.1 İlk Deneyler ve Parametre Ayarlama Süreci</h4>
+    <p>Projenin başlangıcında, literatürdeki yaygın uygulamalar referans alınarak ilk denemeler yapılmıştır. Ancak elde
+        edilen sonuçlar tatmin edici olmadığından, parametreler iteratif olarak iyileştirilmiştir.</p>
+
+    <p><strong>İlk Deneme Konfigürasyonu:</strong></p>
+    <table>
+        <tr>
+            <th>Parametre</th>
+            <th>İlk Değer</th>
+            <th>Sonuç</th>
+        </tr>
+        <tr>
+            <td>Epoch Sayısı</td>
+            <td>50</td>
+            <td>Yetersiz yakınsama</td>
+        </tr>
+        <tr>
+            <td>Batch Size</td>
+            <td>32</td>
+            <td>Düşük eğitim kararlılığı</td>
+        </tr>
+    </table>
+
+    <p><strong>Gözlemlenen Problemler:</strong></p>
+    <ul>
+        <li><strong>50 Epoch:</strong> VAE modeli 50 epoch sonunda loss değeri hala yüksekti (512.70) ve görüntüler çok
+            bulanıktı. DCGAN'da ise Generator henüz yeterli kaliteye ulaşamamıştı.</li>
+        <li><strong>32 Batch Size:</strong> Küçük batch size, gradient güncellemelerinde yüksek varyansa neden oldu.
+            Özellikle DCGAN eğitiminde Discriminator-Generator dengesini korumak zorlaştı.</li>
+    </ul>
+
+    <p>Bu nedenle, final eğitimi için <strong>100 epoch</strong> ve <strong>64 batch size</strong> ile devam edilmiştir.
+        100 epoch sonunda VAE loss değeri 453.60'a düşmüş ve görüntü kalitesi önemli ölçüde artmıştır.</p>
+
+    <h4>4.3.2 Final Eğitim Parametreleri</h4>
+    <table>
+        <tr>
+            <th>Parametre</th>
+            <th>VAE</th>
+            <th>DCGAN</th>
+            <th>Seçim Gerekçesi</th>
+        </tr>
+        <tr>
+            <td>Epoch Sayısı</td>
+            <td>100</td>
+            <td>100</td>
+            <td>50 epoch yetersiz kaldı; 100 epoch ile modeller yeterli yakınsamaya ulaştı</td>
+        </tr>
+        <tr>
+            <td>Batch Size</td>
+            <td>64</td>
+            <td>64</td>
+            <td>32'den 64'e çıkarmak gradient stabilitesini artırdı ve DCGAN dengesini iyileştirdi</td>
+        </tr>
+        <tr>
+            <td>Learning Rate</td>
+            <td>0.0002</td>
+            <td>0.0002</td>
+            <td>DCGAN paper'ındaki önerilen değer; Adam optimizer ile uyumlu</td>
+        </tr>
+        <tr>
+            <td>Optimizer</td>
+            <td>Adam</td>
+            <td>Adam (β1=0.5)</td>
+            <td>Adam, adaptive learning rate ile hızlı yakınsama sağlar; β1=0.5 GAN eğitiminde daha kararlı</td>
+        </tr>
+        <tr>
+            <td>Latent Dimension</td>
+            <td>128</td>
+            <td>100 (noise)</td>
+            <td>128 boyut, 64×64 görüntüler için yeterli temsil kapasitesi sunar</td>
+        </tr>
+        <tr>
+            <td>KL Weight (β)</td>
+            <td>1.0</td>
+            <td>-</td>
+            <td>Standart VAE değeri; β>1 latent space'i daha düzenli yapar ama reconstruction kalitesini düşürür</td>
+        </tr>
+        <tr>
+            <td>Label Smoothing</td>
+            <td>-</td>
+            <td>0.1</td>
+            <td>Discriminator'ın aşırı güvenli olmasını engellemek için; D(x) hedefini 1.0'dan 0.9'a düşürür</td>
+        </tr>
+        <tr>
+            <td>GPU</td>
+            <td colspan="2">NVIDIA RTX 4060 Ti (CUDA)</td>
+            <td>CUDA hızlandırması eğitim süresini önemli ölçüde azaltır</td>
+        </tr>
+    </table>
+
+    <h4>4.3.3 Parametre Seçim Gerekçeleri</h4>
+    <p><strong>Learning Rate (0.0002):</strong> DCGAN paper'ında (Radford et al., 2016) önerilen bu değer, hem Generator
+        hem de Discriminator için dengeli öğrenme sağlar. Daha yüksek değerler (örn. 0.001) eğitimi
+        kararsızlaştırabilir.</p>
+
+    <p><strong>Adam Optimizer:</strong> Momentum ve RMSprop'un avantajlarını birleştiren Adam, derin ağlar için yaygın
+        tercih edilir. DCGAN için β1=0.5 (varsayılan 0.9 yerine) kullanılmıştır, çünkü adversarial eğitimde daha yüksek
+        momentum değerleri kararsızlığa neden olabilir.</p>
+
+    <p><strong>Batch Size (64):</strong> Büyük batch size, Batch Normalization istatistiklerinin daha güvenilir
+        hesaplanmasını sağlar. DCGAN'da BatchNorm kritik öneme sahip olduğundan, 64 batch size tercih edilmiştir.</p>
+
+
+    <!-- 5. DENEYSEL SONUÇLAR -->
+    <h2 id="deneysel">5. Deneysel Sonuçlar</h2>
+
+    <h3>5.1 VAE Eğitim Sonuçları</h3>
+
+    <h4>5.1.1 Loss Değerleri</h4>
+    <table>
+        <tr>
+            <th>Epoch</th>
+            <th>Train Loss</th>
+            <th>Recon Loss</th>
+            <th>KL Loss</th>
+            <th>Val Loss</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>3133.51</td>
+            <td>2967.19</td>
+            <td>166.32</td>
+            <td>1641.81</td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td>725.86</td>
+            <td>540.25</td>
+            <td>185.61</td>
+            <td>728.21</td>
+        </tr>
+        <tr>
+            <td>25</td>
+            <td>587.24</td>
+            <td>412.30</td>
+            <td>174.93</td>
+            <td>620.53</td>
+        </tr>
+        <tr>
+            <td>50</td>
+            <td>511.66</td>
+            <td>347.02</td>
+            <td>164.65</td>
+            <td>512.70</td>
+        </tr>
+        <tr>
+            <td>75</td>
+            <td>476.43</td>
+            <td>316.65</td>
+            <td>159.78</td>
+            <td>489.06</td>
+        </tr>
+        <tr>
+            <td>100</td>
+            <td>453.60</td>
+            <td>297.02</td>
+            <td>156.57</td>
+            <td>463.51</td>
+        </tr>
+    </table>
+
+    <p><strong>En iyi doğrulama kaybı:</strong> 461.62 (Epoch 95)</p>
+
+    <h4>5.1.2 VAE Eğitim Analizi</h4>
+    <img src="outputs/vae/training_losses.png" alt="VAE Training Losses">
+    <p class="img-caption">Şekil 1: VAE eğitim sürecinde loss değerlerinin değişimi</p>
+
+    <p><strong>Gözlemler:</strong></p>
+    <ul>
+        <li><strong>Total Loss:</strong> 3133'ten 453'e düşmüştür (~7x azalma). Bu dramatik düşüş, modelin veriyi etkili
+            bir şekilde öğrendiğini göstermektedir.</li>
+        <li><strong>Reconstruction Loss:</strong> 2967'den 297'ye düşmüştür (~10x azalma). Model, görüntüleri başarılı
+            bir şekilde yeniden oluşturabilmektedir.</li>
+        <li><strong>KL Divergence:</strong> 166'dan başlayıp 188'e yükselmiş, ardından 156'ya düşmüştür. Bu davranış
+            normaldir - başlangıçta model latent space'i keşfederken KL artar, sonra stabilize olur.</li>
+        <li><strong>Train ≈ Val:</strong> Eğitim ve doğrulama kayıpları birbirine yakındır (453 vs 463), bu da
+            <strong>overfitting olmadığını</strong> gösterir.
+        </li>
+        <li><strong>Smooth Curves:</strong> Kayıp eğrileri düzgün ve monoton azalır, bu da kararlı eğitimi gösterir.
+        </li>
+    </ul>
+
+    <h3>5.2 DCGAN Eğitim Sonuçları</h3>
+
+    <h4>5.2.1 Loss Değerleri</h4>
+    <table>
+        <tr>
+            <th>Epoch</th>
+            <th>D Loss</th>
+            <th>G Loss</th>
+            <th>D(x)</th>
+            <th>D(G(z))</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>0.825</td>
+            <td>12.575</td>
+            <td>0.811</td>
+            <td>0.001</td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td>0.690</td>
+            <td>2.662</td>
+            <td>0.758</td>
+            <td>0.116</td>
+        </tr>
+        <tr>
+            <td>25</td>
+            <td>0.660</td>
+            <td>2.709</td>
+            <td>0.765</td>
+            <td>0.110</td>
+        </tr>
+        <tr>
+            <td>50</td>
+            <td>0.577</td>
+            <td>2.691</td>
+            <td>0.787</td>
+            <td>0.095</td>
+        </tr>
+        <tr>
+            <td>75</td>
+            <td>0.680</td>
+            <td>2.901</td>
+            <td>0.786</td>
+            <td>0.103</td>
+        </tr>
+        <tr>
+            <td>100</td>
+            <td>0.482</td>
+            <td>3.247</td>
+            <td>0.837</td>
+            <td>0.060</td>
+        </tr>
+    </table>
+
+    <h4>5.2.2 DCGAN Eğitim Analizi</h4>
+    <img src="outputs/dcgan/training_losses.png" alt="DCGAN Training Losses">
+    <p class="img-caption">Şekil 2: DCGAN eğitim sürecinde Discriminator ve Generator loss değerleri</p>
+
+    <img src="outputs/dcgan/discriminator_outputs.png" alt="Discriminator Outputs">
+    <p class="img-caption">Şekil 3: Discriminator çıktıları - D(x) gerçek görüntüler için, D(G(z)) üretilen görüntüler
+        için</p>
+
+    <p><strong>Gözlemler:</strong></p>
+    <ul>
+        <li><strong>D Loss:</strong> 0.825'ten 0.482'ye düşmüştür. Discriminator gerçek ve sahte görüntüleri ayırt
+            etmede iyileşmiştir.</li>
+        <li><strong>G Loss:</strong> 12.575'ten 3.247'ye düşmüştür. Generator önemli ölçüde iyileşmiştir, ancak ideal
+            seviyeye ulaşamamıştır.</li>
+        <li><strong>D(x) - Gerçek:</strong> 0.811'den 0.837'ye yükselmiştir. Discriminator gerçek görüntüleri %83.7
+            doğrulukla tanımaktadır.</li>
+        <li><strong>D(G(z)) - Sahte:</strong> 0.001'den 0.060'a yükselmiştir. Ancak bu değer hala çok düşüktür (%6).
+        </li>
+    </ul>
+
+    <div class="warning-box">
+        <p><strong>⚠️ Kritik Bulgu: Discriminator-Generator Dengesizliği</strong></p>
+        <p>İdeal bir GAN eğitiminde D(G(z)) değeri ~0.5 civarında olmalıdır (Discriminator gerçek ve sahteler arasında
+            kararsız). Ancak bizim deneyimizde bu değer sadece 0.06'dır. Bu durum, <strong>Discriminator'ın çok
+                güçlü</strong> olduğunu ve Generator'ın yeterince gerçekçi görüntüler üretemediğini göstermektedir.</p>
+    </div>
+
+    <h3>5.3 Model Parametreleri</h3>
+    <table>
+        <tr>
+            <th>Model</th>
+            <th>Bileşen</th>
+            <th>Parametre Sayısı</th>
+        </tr>
+        <tr>
+            <td>VAE</td>
+            <td>Encoder + Decoder</td>
+            <td>2,958,659</td>
+        </tr>
+        <tr>
+            <td rowspan="3">DCGAN</td>
+            <td>Generator</td>
+            <td>3,576,704</td>
+        </tr>
+        <tr>
+            <td>Discriminator</td>
+            <td>2,765,568</td>
+        </tr>
+        <tr>
+            <td>Toplam</td>
+            <td>6,342,272</td>
+        </tr>
+    </table>
+
+    <!-- 6. KARŞILAŞTIRMALI ANALİZ -->
+    <h2 id="karsilastirma">6. Karşılaştırmalı Analiz</h2>
+
+    <h3>6.1 Üretilen Görüntülerin Görsel Karşılaştırması</h3>
+
+    <h4>6.1.1 Gerçek Görüntüler (Referans)</h4>
+    <img src="outputs/evaluation/real_samples.png" alt="Real Samples">
+    <p class="img-caption">Şekil 4: Veri setinden alınan gerçek meyve görüntüleri</p>
+
+    <h4>6.1.2 VAE ile Üretilen Görüntüler</h4>
+    <img src="outputs/evaluation/vae_samples.png" alt="VAE Samples">
+    <p class="img-caption">Şekil 5: VAE modeli tarafından üretilen görüntüler (100 epoch sonrası)</p>
+
+    <p><strong>VAE Görüntü Analizi:</strong></p>
+    <ul>
+        <li>Görüntüler <strong>bulanık</strong> ancak meyve şekilleri tanınabilir</li>
+        <li>Renkler doğru: kırmızı (elma), sarı (muz), turuncu (portakal)</li>
+        <li>Yuvarlak formlar başarıyla öğrenilmiş</li>
+        <li><strong>Her görüntü</strong> bir meyveye benziyor - tutarlı çıktı</li>
+        <li>Taze ve çürük ayrımı renk tonlarında görülebilir</li>
+    </ul>
+
+    <h4>6.1.3 DCGAN ile Üretilen Görüntüler</h4>
+    <img src="outputs/evaluation/gan_samples.png" alt="GAN Samples">
+    <p class="img-caption">Şekil 6: DCGAN modeli tarafından üretilen görüntüler (100 epoch sonrası)</p>
+
+    <p><strong>DCGAN Görüntü Analizi:</strong></p>
+    <ul>
+        <li>Görüntüler VAE'ye göre <strong>daha keskin</strong></li>
+        <li>Bazı görüntüler oldukça gerçekçi (özellikle portakallar)</li>
+        <li>Ancak bazı görüntülerde artifaktlar ve gürültü var</li>
+        <li>Çeşitlilik daha yüksek - farklı meyve tipleri üretiyor</li>
+        <li>Tutarsızlık: Bazı görüntüler başarılı, bazıları bozuk</li>
+    </ul>
+
+    <h4>6.1.4 Yan Yana Karşılaştırma</h4>
+    <img src="outputs/evaluation/model_comparison.png" alt="Model Comparison">
+    <p class="img-caption">Şekil 7: Gerçek, VAE ve DCGAN görüntülerinin yan yana karşılaştırması</p>
+
+    <h3>6.2 Nicel Metrikler Karşılaştırması</h3>
+    <table>
+        <tr>
+            <th>Metrik</th>
+            <th>VAE</th>
+            <th>DCGAN</th>
+            <th>Yorum</th>
+        </tr>
+        <tr>
+            <td>Parametre Sayısı</td>
+            <td>2,958,659</td>
+            <td>6,342,272</td>
+            <td>VAE ~2x daha az parametre</td>
+        </tr>
+        <tr>
+            <td>Çeşitlilik Skoru</td>
+            <td>71.18</td>
+            <td>97.30</td>
+            <td>DCGAN %37 daha çeşitli</td>
+        </tr>
+        <tr>
+            <td>Üretim Süresi</td>
+            <td>0.92 ms</td>
+            <td>1.75 ms</td>
+            <td>VAE ~2x daha hızlı</td>
+        </tr>
+        <tr>
+            <td>Görüntü/saniye</td>
+            <td>69,729</td>
+            <td>36,632</td>
+            <td>VAE throughput üstün</td>
+        </tr>
+        <tr>
+            <td>Piksel Ortalaması</td>
+            <td>0.595</td>
+            <td>0.589</td>
+            <td>Benzer</td>
+        </tr>
+        <tr>
+            <td>Piksel Standart Sapma</td>
+            <td>0.278</td>
+            <td>0.353</td>
+            <td>DCGAN daha kontrastlı</td>
+        </tr>
+    </table>
+
+    <h3>6.3 Eğitim Kararlılığı Karşılaştırması</h3>
+    <table>
+        <tr>
+            <th>Kriter</th>
+            <th>VAE</th>
+            <th>DCGAN</th>
+        </tr>
+        <tr>
+            <td>Loss Eğrisi Davranışı</td>
+            <td>Smooth, monoton azalan</td>
+            <td>Dalgalı, dengesiz</td>
+        </tr>
+        <tr>
+            <td>Convergence Garantisi</td>
+            <td>Var (ELBO maksimizasyonu)</td>
+            <td>Teorik garanti yok</td>
+        </tr>
+        <tr>
+            <td>Overfitting Riski</td>
+            <td>Düşük (Train≈Val)</td>
+            <td>D aşırı güçlenebilir</td>
+        </tr>
+        <tr>
+            <td>Hiperparametre Hassasiyeti</td>
+            <td>Düşük</td>
+            <td>Yüksek</td>
+        </tr>
+        <tr>
+            <td>Mode Collapse</td>
+            <td>Yok</td>
+            <td>Potansiyel risk</td>
+        </tr>
+    </table>
+
+    <h3>6.4 Güçlü ve Zayıf Yönler</h3>
+
+    <h4>VAE</h4>
+    <table>
+        <tr>
+            <th style="background:#d4edda;">Güçlü Yönler</th>
+            <th style="background:#f8d7da;">Zayıf Yönler</th>
+        </tr>
+        <tr>
+            <td>
+                <ul>
+                    <li>Kararlı ve öngörülebilir eğitim</li>
+                    <li>Mode collapse problemi yok</li>
+                    <li>Yapılandırılmış latent space</li>
+                    <li>Interpolasyon yapılabilir</li>
+                    <li>Hem encoding hem generation</li>
+                    <li>Daha az parametre</li>
+                    <li>Hızlı görüntü üretimi</li>
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    <li>Bulanık görüntüler</li>
+                    <li>MSE loss detay kaybeder</li>
+                    <li>Gaussian varsayımı kısıtlayıcı</li>
+                    <li>Keskin kenarlar üretemez</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h4>DCGAN</h4>
+    <table>
+        <tr>
+            <th style="background:#d4edda;">Güçlü Yönler</th>
+            <th style="background:#f8d7da;">Zayıf Yönler</th>
+        </tr>
+        <tr>
+            <td>
+                <ul>
+                    <li>Keskin ve detaylı görüntüler</li>
+                    <li>Gerçekçi dokular</li>
+                    <li>Yüksek çeşitlilik potansiyeli</li>
+                    <li>Adversarial training güçlü</li>
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    <li>Eğitim dengesizlikleri</li>
+                    <li>Mode collapse riski</li>
+                    <li>D/G denge zorluğu</li>
+                    <li>Hiperparametre hassasiyeti</li>
+                    <li>Değerlendirme zorluğu</li>
+                    <li>Daha fazla parametre</li>
+                    <li>Tutarsız kalite</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h3>6.5 Önemli Bulgular ve Yorumlar</h3>
+
+    <div class="info-box">
+        <p><strong>Bulgu 1: VAE Bulanıklığı Kaçınılmaz</strong></p>
+        <p>VAE'nin bulanık görüntüler üretmesi, modelin bir "hatası" değil, matematiksel yapısının doğal sonucudur. MSE
+            loss, piksel değerlerinin ortalamasını optimize eder ve bu da keskin kenarlar yerine bulanık geçişlere yol
+            açar. Bu trade-off VAE'ye özgüdür.</p>
+    </div>
+
+    <div class="info-box">
+        <p><strong>Bulgu 2: DCGAN Eğitimi Dengesiz</strong></p>
+        <p>Deneyimizde D(G(z)) = 0.06 değeri, Discriminator'ın Generator'a baskın olduğunu gösterir. Bu durum,
+            Generator'ın öğrenme hızının Discriminator'dan yavaş olmasından kaynaklanmaktadır. Çözüm olarak learning
+            rate oranları ayarlanabilir veya Discriminator eğitimi yavaşlatılabilir.</p>
+    </div>
+
+    <div class="info-box">
+        <p><strong>Bulgu 3: Çeşitlilik vs Tutarlılık Trade-off</strong></p>
+        <p>DCGAN daha yüksek çeşitlilik skoru (97.30 vs 71.18) gösterirken, VAE daha tutarlı çıktılar üretmektedir. Bu,
+            modellerin farklı kullanım senaryoları için uygun olduğunu gösterir: VAE güvenilirlik gerektiren uygulamalar
+            için, DCGAN yaratıcı çeşitlilik gerektiren uygulamalar için tercih edilebilir.</p>
+    </div>
+
+    <!-- 7. SONUÇ -->
+    <h2 id="sonuc">7. Sonuç ve Değerlendirme</h2>
+
+    <h3>7.1 Özet</h3>
+    <p>Bu çalışmada, meyve tazeliği veri seti üzerinde VAE ve DCGAN modelleri başarıyla uygulanmış ve kapsamlı bir
+        şekilde karşılaştırılmıştır. Her iki model de 100 epoch boyunca NVIDIA RTX 4060 Ti GPU üzerinde eğitilmiştir.
+    </p>
+
+    <p><strong>Temel Bulgular:</strong></p>
+    <ol>
+        <li>VAE, kararlı eğitim dinamiği ve tutarlı çıktılarla öne çıkmaktadır. Loss değerleri monoton azalmış ve
+            overfitting gözlemlenmemiştir.</li>
+        <li>DCGAN, daha keskin ve çeşitli görüntüler üretebilmektedir. Ancak Discriminator-Generator dengesizliği
+            (D(G(z))=0.06) optimum eğitim koşullarına ulaşılamadığını göstermektedir.</li>
+        <li>Her iki model de meyve şekillerini, renklerini ve taze/çürük ayrımlarını başarıyla öğrenmiştir.</li>
+        <li>VAE hesaplama verimliliği açısından üstündür (~2x hızlı, ~2x az parametre).</li>
+        <li>DCGAN görsel kalite ve çeşitlilik açısından potansiyel olarak üstündür, ancak eğitim zorluğu dezavantajıdır.
+        </li>
+    </ol>
+
+    <h3>7.2 Değerlendirme</h3>
+    <p>Görüntü sentezi görevinde her iki model de farklı avantajlar sunmaktadır:</p>
+
+    <table>
+        <tr>
+            <th>Kullanım Senaryosu</th>
+            <th>Önerilen Model</th>
+            <th>Gerekçe</th>
+        </tr>
+        <tr>
+            <td>Veri artırımı (Data Augmentation)</td>
+            <td>VAE</td>
+            <td>Tutarlı, güvenilir çıktılar</td>
+        </tr>
+        <tr>
+            <td>Yüksek kaliteli görüntü üretimi</td>
+            <td>DCGAN</td>
+            <td>Daha keskin sonuçlar</td>
+        </tr>
+        <tr>
+            <td>Anomali tespiti</td>
+            <td>VAE</td>
+            <td>Reconstruction error kullanılabilir</td>
+        </tr>
+        <tr>
+            <td>Yaratıcı uygulamalar</td>
+            <td>DCGAN</td>
+            <td>Yüksek çeşitlilik</td>
+        </tr>
+        <tr>
+            <td>Hızlı prototipleme</td>
+            <td>VAE</td>
+            <td>Kolay eğitim, az kaynak</td>
+        </tr>
+    </table>
+
+    <h3>7.3 Öneriler ve Gelecek Çalışmalar</h3>
+
+    <h4>DCGAN İyileştirmeleri:</h4>
+    <ul>
+        <li><strong>Learning Rate Ayarı:</strong> Generator için daha yüksek learning rate (örn. G: 0.0003, D: 0.0001)
+        </li>
+        <li><strong>Wasserstein Loss:</strong> BCE yerine Wasserstein mesafesi kullanımı (WGAN)</li>
+        <li><strong>Spectral Normalization:</strong> Discriminator katmanlarına uygulama</li>
+        <li><strong>Progressive Training:</strong> Düşük çözünürlükten yüksek çözünürlüğe kademeli eğitim</li>
+        <li><strong>More Epochs:</strong> 200-300 epoch eğitim denemesi</li>
+    </ul>
+
+    <h4>VAE İyileştirmeleri:</h4>
+    <ul>
+        <li><strong>Perceptual Loss:</strong> MSE yerine VGG-tabanlı perceptual loss kullanımı</li>
+        <li><strong>VAE-GAN Hybrid:</strong> Reconstruction loss + Adversarial loss kombinasyonu</li>
+        <li><strong>β-VAE:</strong> KL ağırlığını ayarlayarak daha yapılandırılmış latent space</li>
+    </ul>
+
+    <h4>Genel Öneriler:</h4>
+    <ul>
+        <li>FID (Fréchet Inception Distance) metriği ile daha objektif kalite değerlendirmesi</li>
+        <li>Daha yüksek çözünürlük (128×128 veya 256×256) ile deneyler</li>
+        <li>Sınıf koşullu üretim (Conditional GAN/VAE) denemesi</li>
+    </ul>
+
+    <h3>7.4 Sonuç</h3>
+    <p>Bu proje, üretici modellerin görüntü sentezi görevindeki performansını deneysel olarak karşılaştırmıştır. VAE ve
+        DCGAN, farklı güçlü ve zayıf yönleri olan tamamlayıcı yaklaşımlar olarak değerlendirilebilir. Uygulama
+        senaryosuna bağlı olarak, kararlılık gerektiren durumlarda VAE, görsel kalite gerektiren durumlarda DCGAN tercih
+        edilmelidir.</p>
+
+    <!-- 8. REFERANSLAR -->
+    <h2 id="referanslar">8. Referanslar</h2>
+    <ol>
+        <li>Kingma, D. P., & Welling, M. (2014). Auto-Encoding Variational Bayes. <em>International Conference on
+                Learning Representations (ICLR)</em>.</li>
+        <li>Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., ... & Bengio, Y. (2014).
+            Generative Adversarial Nets. <em>Advances in Neural Information Processing Systems (NeurIPS)</em>.</li>
+        <li>Radford, A., Metz, L., & Chintala, S. (2016). Unsupervised Representation Learning with Deep Convolutional
+            Generative Adversarial Networks. <em>International Conference on Learning Representations (ICLR)</em>.</li>
+        <li>Doersch, C. (2016). Tutorial on Variational Autoencoders. <em>arXiv preprint arXiv:1606.05908</em>.</li>
+        <li>Kaggle Dataset: Fruits Fresh and Rotten for Classification. <a
+                href="https://www.kaggle.com/datasets/sriramr/fruits-fresh-and-rotten-for-classification">https://www.kaggle.com/datasets/sriramr/fruits-fresh-and-rotten-for-classification</a>
+        </li>
+    </ol>
+
+    <hr>
+    <p style="text-align: center;">
+        <strong>DSM 5014 - Derin Öğrenme Yöntemleri ve Uygulamaları</strong><br>
+        Hazırlayan: Malika Annamuradova (2024900442)<br>
+        Aralık 2025
+    </p>
+
+</body>
+
+</html>
